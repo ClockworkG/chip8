@@ -5,3 +5,4 @@ authors = ["Robin Le Bihan <robin.le-bihan@epita.fr>"]
 edition = "2018"
 
 [dependencies]
+clap = "*"
