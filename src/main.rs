@@ -1,3 +1,4 @@
+mod asm;
 mod specs;
 mod memory;
 mod cpu;
