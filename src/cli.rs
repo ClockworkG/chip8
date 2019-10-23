@@ -3,6 +3,8 @@ use std::path::{Path};
 use crate::asm;
 use crate::cpu;
 use crate::memory;
+use crate::debugger;
+use crate::context::Context;
 
 pub mod error {
     use std::io;
@@ -19,10 +21,15 @@ pub mod error {
     }
 }
 
-pub fn emulate(path: &Path, _debug: bool) -> Result<(), error::CLIError> {
+pub fn emulate(path: &Path, debug: bool) -> Result<(), error::CLIError> {
     let rom = memory::ROM::from_file(path)?;
     let memory = memory::MainMemory::with_rom(rom);
     let mut cpu = cpu::CPU::new(memory);
+
+    if debug {
+        let mut debugger = debugger::Debugger::with_cpu(&cpu);
+        debugger.run();
+    }
 
     Ok(())
 }

@@ -3,6 +3,8 @@ mod specs;
 mod memory;
 mod cpu;
 mod cli;
+mod context;
+mod debugger;
 
 extern crate clap;
 
@@ -17,7 +19,7 @@ fn main() {
         .subcommand(
             App::new("vm")
                 .about("runs the Chip8 virtual machine")
-                .arg(Arg::from_usage("-g, --debug, 'enables debugging mode'"))
+                .arg(Arg::from_usage("-g, --debug 'enables debugging mode'"))
                 .arg(Arg::from_usage("<rom> 'ROM file to run.'")),
         )
         .subcommand(
