@@ -10,12 +10,43 @@ pub enum InstructionData {
     Cls,
     Ret,
     Jp(Address),
+    Call(Address),
+    Se(Nibble, Byte),
+    Sne(Nibble, Byte),
+    SeReg(Nibble, Nibble),
+    Ld(Nibble, Byte),
+    Add(Nibble, Byte),
+    LdReg(Nibble, Nibble),
+    Or(Nibble, Nibble),
+    And(Nibble, Nibble),
+    Xor(Nibble, Nibble),
+    AddReg(Nibble, Nibble),
+    SubReg(Nibble, Nibble),
+    Shr(Nibble, Nibble),
+    SubN(Nibble, Nibble),
+    Shl(Nibble, Nibble),
+    SneReg(Nibble, Nibble),
+    LdI(Address),
+    JpV0(Address),
+    Rnd(Nibble, Byte),
+    Drw(Nibble, Nibble, Nibble),
+    Skp(Nibble),
+    Sknp(Nibble),
+    LdRegDt(Nibble),
+    LdK(Nibble),
+    LdDtReg(Nibble),
+    LdSt(Nibble),
+    AddI(Nibble),
+    LdF(Nibble),
+    LdB(Nibble),
+    LdIMem(Nibble),
+    LdVx(Nibble),
     Unknown,
 }
 
 pub fn decode_instruction(instruction: Instruction) -> InstructionData {
-    let x = (instruction & 0x0F00) >> 8;
-    let y = (instruction & 0x00F0) >> 4;
+    let x = ((instruction & 0x0F00) >> 8) as Nibble;
+    let y = ((instruction & 0x00F0) >> 4) as Nibble;
     let n = instruction & 0x0FFF;
 
     match (instruction & 0xF000) >> 12 {
@@ -27,9 +58,18 @@ pub fn decode_instruction(instruction: Instruction) -> InstructionData {
             }
         },
 
-        0x1 => {
-            InstructionData::Jp(n)
+        0x1 => InstructionData::Jp(n),
+        0x2 => InstructionData::Call(n),
+        0x3 => InstructionData::Se(x, truncate_2_bytes(n)),
+        0x4 => InstructionData::Sne(x, truncate_2_bytes(n)),
+        0x5 => {
+            match n & 0x000F {
+                0x0 => InstructionData::SeReg(x, y),
+                _ => InstructionData::Unknown,
+            }
         },
+        0x6 => InstructionData::Ld(x, truncate_2_bytes(n)),
+        0x7 => InstructionData::Add(x, truncate_2_bytes(n)),
         _ => InstructionData::Unknown,
     }
 }
