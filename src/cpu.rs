@@ -16,14 +16,14 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new() -> Self {
+    pub fn new(memory: MainMemory) -> Self {
         CPU {
             i: 0x0,
             pc: 0x0,
             registers: [0x0; REGISTERS_COUNT],
             stack: [0x0; STACK_SIZE],
             sp: 0x0,
-            memory: MainMemory::new(),
+            memory: memory,
             delay_timer: 0,
             sound_timer: 0,
         }
