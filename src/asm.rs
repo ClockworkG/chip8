@@ -86,7 +86,7 @@ pub fn decode_instruction(instruction: Instruction) -> InstructionData {
         },
         0x9 => {
             match n & 0x000F {
-                0x0 => InstructionData::Sne(x, y),
+                0x0 => InstructionData::SneReg(x, y),
                 _ => InstructionData::Unknown,
             }
         },
@@ -116,6 +116,54 @@ pub fn decode_instruction(instruction: Instruction) -> InstructionData {
             }
         },
         _ => InstructionData::Unknown,
+    }
+}
+
+impl std::fmt::Display for InstructionData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use InstructionData::*;
+
+        match self {
+            Sys(n) => write!(f, "SYS {:#05X}", n),
+            Cls => write!(f, "CLS"),
+            Ret => write!(f, "RET"),
+            Jp(n) => write!(f, "JP {:#05X}", n),
+            Call(n) => write!(f, "CALL {:#05X}", n),
+            Se(x, n) => write!(f, "SE V{:1X} {:#04X}", x, n),
+            /*
+            Sne(Nibble, Byte),
+            SeReg(Nibble, Nibble),
+            Ld(Nibble, Byte),
+            Add(Nibble, Byte),
+            LdReg(Nibble, Nibble),
+            Or(Nibble, Nibble),
+            And(Nibble, Nibble),
+            Xor(Nibble, Nibble),
+            AddReg(Nibble, Nibble),
+            SubReg(Nibble, Nibble),
+            Shr(Nibble, Nibble),
+            SubN(Nibble, Nibble),
+            Shl(Nibble, Nibble),
+            SneReg(Nibble, Nibble),
+            LdI(Address),
+            JpV0(Address),
+            Rnd(Nibble, Byte),
+            Drw(Nibble, Nibble, Nibble),
+            Skp(Nibble),
+            Sknp(Nibble),
+            LdRegDt(Nibble),
+            LdK(Nibble),
+            LdDtReg(Nibble),
+            LdSt(Nibble),
+            AddI(Nibble),
+            LdF(Nibble),
+            LdB(Nibble),
+            LdIMem(Nibble),
+            LdVx(Nibble),
+            Unknown,
+            */
+            _ => write!(f, "Unknown")
+        }
     }
 }
 
