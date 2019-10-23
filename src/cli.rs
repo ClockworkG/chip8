@@ -1,8 +1,8 @@
 use std::path::{Path};
-use std::fs::File;
-use std::io::Read;
 
 use crate::asm;
+use crate::cpu;
+use crate::memory;
 
 pub mod error {
     use std::io;
@@ -19,25 +19,19 @@ pub mod error {
     }
 }
 
+pub fn emulate(path: &Path, _debug: bool) -> Result<(), error::CLIError> {
+    let rom = memory::ROM::from_file(path)?;
+    let memory = memory::MainMemory::with_rom(rom);
+    let mut cpu = cpu::CPU::new(memory);
+
+    Ok(())
+}
+
 pub fn disassemble(path: &Path, address: bool) -> Result<(), error::CLIError> {
-    let mut file = File::open(path)?;
-    let mut bytes = Vec::new();
-
-    file.read_to_end(&mut bytes)?;
-
-    fn merge_bytes(left: u8, right: u8) -> u16 {
-        ((left as u16) << 8) | (right as u16)
-    }
-
-    let instructions: Vec<u16> = bytes.chunks(2)
-                                      .map(|word| {
-                                        let (left, right) = (word[0], word[1]);
-                                        merge_bytes(left, right)
-                                      })
-                                      .collect();
+    let rom = memory::ROM::from_file(path)?;
 
     println!("{:-^20}", path.file_name().unwrap().to_str().unwrap());
-    for (addr, instr) in instructions.iter().enumerate() {
+    for (addr, instr) in rom.instructions().iter().enumerate() {
         let decoded = asm::decode_instruction(*instr);
 
         if address {
