@@ -70,6 +70,20 @@ pub fn decode_instruction(instruction: Instruction) -> InstructionData {
         },
         0x6 => InstructionData::Ld(x, truncate_2_bytes(n)),
         0x7 => InstructionData::Add(x, truncate_2_bytes(n)),
+        0x8 => {
+            match n & 0x000F {
+                0x0 => InstructionData::LdReg(x, y),
+                0x1 => InstructionData::Or(x, y),
+                0x2 => InstructionData::And(x, y),
+                0x3 => InstructionData::Xor(x, y),
+                0x4 => InstructionData::AddReg(x, y),
+                0x5 => InstructionData::SubReg(x, y),
+                0x6 => InstructionData::Shr(x, y),
+                0x7 => InstructionData::SubN(x, y),
+                0xE => InstructionData::Shl(x, y),
+                _ => InstructionData::Unknown,
+            }
+        },
         _ => InstructionData::Unknown,
     }
 }
