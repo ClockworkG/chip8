@@ -94,6 +94,27 @@ pub fn decode_instruction(instruction: Instruction) -> InstructionData {
         0xB => InstructionData::JpV0(n),
         0xC => InstructionData::Rnd(x, truncate_2_bytes(n)),
         0xD => InstructionData::Drw(x, y, truncate_1_byte(n)),
+        0xE => {
+            match n & 0x00FF {
+                0x9E => InstructionData::Skp(x),
+                0xA1 => InstructionData::Sknp(x),
+                _ => InstructionData::Unknown,
+            }
+        },
+        0xF => {
+            match n & 0x00FF {
+                0x07 => InstructionData::LdRegDt(x),
+                0x0A => InstructionData::LdK(x),
+                0x15 => InstructionData::LdDtReg(x),
+                0x18 => InstructionData::LdSt(x),
+                0x1E => InstructionData::AddI(x),
+                0x29 => InstructionData::LdF(x),
+                0x33 => InstructionData::LdB(x),
+                0x55 => InstructionData::LdIMem(x),
+                0x65 => InstructionData::LdVx(x),
+                _ => InstructionData::Unknown,
+            }
+        },
         _ => InstructionData::Unknown,
     }
 }
