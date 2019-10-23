@@ -52,6 +52,10 @@ impl Memory for MainMemory {
     }
 }
 
+pub fn merge_bytes(left: u8, right: u8) -> u16 {
+    ((left as u16) << 8) | (right as u16)
+}
+
 impl ROM {
     pub fn from_file(path: &Path) -> Result<Self, io::Error> {
         let mut bytes = Vec::new();
@@ -79,10 +83,6 @@ impl ROM {
     }
 
     pub fn instructions(&self) -> Vec<u16> {
-        fn merge_bytes(left: u8, right: u8) -> u16 {
-            ((left as u16) << 8) | (right as u16)
-        }
-
         self.data.chunks(2)
                  .map(|word| {
                     let (left, right) = (word[0], word[1]);

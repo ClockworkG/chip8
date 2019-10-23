@@ -1,6 +1,4 @@
 use std::path::{Path};
-use std::fs::File;
-use std::io::Read;
 
 use crate::asm;
 use crate::cpu;
@@ -23,10 +21,9 @@ pub mod error {
 
 pub fn emulate(path: &Path, _debug: bool) -> Result<(), error::CLIError> {
     let rom = memory::ROM::from_file(path)?;
-    let _memory = memory::MainMemory::with_rom(rom);
-    let _cpu = cpu::CPU::new(_memory);
+    let memory = memory::MainMemory::with_rom(rom);
+    let mut cpu = cpu::CPU::new(memory);
 
-    // FIXME...
     Ok(())
 }
 
