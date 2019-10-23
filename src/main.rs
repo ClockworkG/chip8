@@ -2,6 +2,7 @@ mod asm;
 mod specs;
 mod memory;
 mod cpu;
+mod cli;
 
 extern crate clap;
 
@@ -26,6 +27,7 @@ fn main() {
             App::new("dis")
                 .about("disassembles bytecode to code.")
                 .arg(Arg::from_usage("<rom> 'ROM file to disassemble'"))
+                .arg(Arg::from_usage("-n 'enables display of addresses'"))
         )
         .get_matches();
 
@@ -33,7 +35,10 @@ fn main() {
         // FIXME...
     } else if let Some(ref _matches) = matches.subcommand_matches("asm") {
         // FIXME...
-    } else if let Some(ref _matches) = matches.subcommand_matches("dis") {
-        // FIXME...
+    } else if let Some(ref matches) = matches.subcommand_matches("dis") {
+        let path = std::path::Path::new(matches.value_of("rom").unwrap());
+        let display_address = matches.is_present("n");
+
+        cli::disassemble(&path, display_address).unwrap();
     }
 }
