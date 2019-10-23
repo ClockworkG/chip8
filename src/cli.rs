@@ -27,7 +27,7 @@ pub fn emulate(path: &Path, debug: bool) -> Result<(), error::CLIError> {
     let mut cpu = cpu::CPU::new(memory);
 
     if debug {
-        let mut debugger = debugger::Debugger::with_cpu(&cpu);
+        let mut debugger = debugger::Debugger::with_cpu(&mut cpu);
         debugger.run();
     }
 

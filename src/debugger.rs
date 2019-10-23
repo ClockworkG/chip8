@@ -9,7 +9,7 @@ use rustyline::Editor;
 static PROMPT: &str = "(chip8-debug) ";
 
 pub struct Debugger<'a> {
-    cpu: &'a CPU,
+    cpu: &'a mut CPU,
     must_exit: bool,
     editor: Editor<()>
 }
@@ -28,6 +28,8 @@ impl<'a> Debugger<'a> {
 
     fn process_input(&mut self, input: &str) {
         match input {
+            "status" => println!("{}", self.cpu),
+            "next" => self.cpu.tick(),
             "exit" => self.must_exit = true,
             _ => {}
         }
@@ -35,7 +37,7 @@ impl<'a> Debugger<'a> {
 }
 
 impl<'a> Context<'a> for Debugger<'a> {
-    fn with_cpu(cpu: &'a CPU) -> Self {
+    fn with_cpu(cpu: &'a mut CPU) -> Self {
         Debugger {
             cpu,
             editor: Editor::<()>::new(),

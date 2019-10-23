@@ -16,6 +16,7 @@ use crate::asm::{
     InstructionData,
     decode_instruction,
 };
+use std::fmt;
 
 pub struct CPU {
     i: Register<Address>,
@@ -65,5 +66,30 @@ impl CPU {
         let instr = self.fetch();
         let data = self.decode(instr);
         self.execute(data);
+    }
+}
+
+impl fmt::Display for CPU {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "I = {:#05x}, PC = {:#05x}\n", self.i, self.pc)?;
+        write!(f, "DT = {:#04x}, ST = {:#04x}\n", self.delay_timer, self.sound_timer)?;
+        write!(f, "\n")?;
+
+        for (idx, regs) in self.registers.chunks(2).enumerate() {
+            let (left, right) = (regs[0], regs[1]);
+            write!(f, "V{:1X} = {:#04x}, V{:1X} = {:#04x}\n",
+                   idx * 2, left, idx * 2 + 1, right)?;
+        }
+        write!(f, "\nStack: ")?;
+
+        for (idx, val) in self.stack.iter().enumerate() {
+            if (idx as u8) == self.sp {
+                write!(f, "[ {:#05x} ]", val)?;
+            } else {
+                write!(f, " {:#05x} ", val)?;
+            }
+        }
+
+        Ok(())
     }
 }
