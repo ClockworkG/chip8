@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::Read;
 
 use crate::asm;
+use crate::cpu;
 
 pub mod error {
     use std::io;
@@ -17,6 +18,13 @@ pub mod error {
             CLIError::IOError(err)
         }
     }
+}
+
+pub fn emulate(path: &Path, _debug: bool) -> Result<(), error::CLIError> {
+    let _cpu = cpu::CPU::new();
+
+    // FIXME...
+    Ok(())
 }
 
 pub fn disassemble(path: &Path, address: bool) -> Result<(), error::CLIError> {

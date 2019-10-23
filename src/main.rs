@@ -7,6 +7,7 @@ mod cli;
 extern crate clap;
 
 use clap::{App, Arg};
+use std::path::Path;
 
 fn main() {
     let matches = App::new("Chip8")
@@ -16,6 +17,7 @@ fn main() {
         .subcommand(
             App::new("vm")
                 .about("runs the Chip8 virtual machine")
+                .arg(Arg::from_usage("-g, --debug, 'enables debugging mode'"))
                 .arg(Arg::from_usage("<rom> 'ROM file to run.'")),
         )
         .subcommand(
@@ -31,12 +33,15 @@ fn main() {
         )
         .get_matches();
 
-    if let Some(ref _matches) = matches.subcommand_matches("vm") {
-        // FIXME...
+    if let Some(ref matches) = matches.subcommand_matches("vm") {
+        let path = Path::new(matches.value_of("rom").unwrap());
+        let debug_mode = matches.is_present("debug");
+
+        cli::emulate(&path, debug_mode).unwrap();
     } else if let Some(ref _matches) = matches.subcommand_matches("asm") {
         // FIXME...
     } else if let Some(ref matches) = matches.subcommand_matches("dis") {
-        let path = std::path::Path::new(matches.value_of("rom").unwrap());
+        let path = Path::new(matches.value_of("rom").unwrap());
         let display_address = matches.is_present("n");
 
         cli::disassemble(&path, display_address).unwrap();
