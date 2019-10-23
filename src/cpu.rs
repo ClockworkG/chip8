@@ -1,3 +1,5 @@
+extern crate termion;
+
 use crate::specs::{
     Register,
     Byte,
@@ -17,6 +19,8 @@ use crate::asm::{
     decode_instruction,
 };
 use std::fmt;
+use rand::Rng;
+use rand::prelude::ThreadRng;
 
 pub struct CPU {
     i: Register<Address>,
@@ -30,6 +34,8 @@ pub struct CPU {
 
     delay_timer: Byte,
     sound_timer: Byte,
+
+    random_device: ThreadRng,
 }
 
 impl CPU {
@@ -43,12 +49,14 @@ impl CPU {
             memory: memory,
             delay_timer: 0,
             sound_timer: 0,
+            random_device: rand::thread_rng(),
         }
     }
 
     fn fetch(&mut self) -> Instruction {
         let left = self.memory.read(self.pc);
         let right = self.memory.read(self.pc + 1);
+        self.pc += 2;
 
         merge_bytes(left, right)
     }
@@ -57,36 +65,76 @@ impl CPU {
         decode_instruction(instr)
     }
 
-    fn execute(&mut self, data: InstructionData) {
-        // FIXME
-        self.pc += 2;
+    fn execute(&mut self, data: InstructionData) -> Address {
+        use InstructionData::*;
+
+        match data {
+            Cls => (),
+            Ret => {
+                self.pc = self.stack[self.sp as usize];
+                self.sp -= 1;
+            },
+            Jp(n) => self.pc = n,
+            Call(n) => {
+                self.sp += 1;
+                self.stack[self.sp as usize] = self.pc;
+                self.pc = n;
+            },
+            LdI(n) => self.i = n,
+            Rnd(x, n) => {
+                let random: u16 = self.random_device.gen_range(0, 256);
+                self.registers[x as usize] = (random as u8) & n;
+            },
+            Se(x, n) => {
+                if self.registers[x as usize] == n {
+                    self.pc += 2;
+                }
+            },
+            _ => {}
+        }
+
+        self.pc
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self) -> Address {
         let instr = self.fetch();
         let data = self.decode(instr);
-        self.execute(data);
+        self.execute(data)
     }
 }
 
 impl fmt::Display for CPU {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "I = {:#05x}, PC = {:#05x}\n", self.i, self.pc)?;
-        write!(f, "DT = {:#04x}, ST = {:#04x}\n", self.delay_timer, self.sound_timer)?;
+        use termion::{color, style};
+
+        write!(f, "I = {}{:#05x}{}, PC = {}{:#05x}{}\n",
+               style::Bold, self.i, style::Reset,
+               style::Bold, self.pc, style::Reset)?;
+
+        write!(f, "DT = {}{:#04x}{}, ST = {}{:#04x}{}\n",
+               style::Bold, self.delay_timer, style::Reset,
+               style::Bold, self.sound_timer, style::Reset)?;
         write!(f, "\n")?;
 
         for (idx, regs) in self.registers.chunks(2).enumerate() {
             let (left, right) = (regs[0], regs[1]);
-            write!(f, "V{:1X} = {:#04x}, V{:1X} = {:#04x}\n",
-                   idx * 2, left, idx * 2 + 1, right)?;
+            write!(f, "V{:1X} = {}{:#04x}{}, V{:1X} = {}{:#04x}{}\n",
+                   idx * 2, style::Bold, left, style::Reset,
+                   idx * 2 + 1, style::Bold, right, style::Reset)?;
         }
         write!(f, "\nStack: ")?;
 
         for (idx, val) in self.stack.iter().enumerate() {
             if (idx as u8) == self.sp {
-                write!(f, "[ {:#05x} ]", val)?;
+                write!(f, "[ {}{:#05x}{} ]",
+                       style::Bold, val, style::Reset)?;
             } else {
-                write!(f, " {:#05x} ", val)?;
+                if (idx as u8) < self.sp {
+                    write!(f, "{}", color::Fg(color::Green))?;
+                } else {
+                    write!(f, "{}", color::Fg(color::Red))?;
+                }
+                write!(f, " {:#05x}{} ", val, style::Reset)?;
             }
         }
 

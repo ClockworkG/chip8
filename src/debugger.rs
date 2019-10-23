@@ -29,7 +29,7 @@ impl<'a> Debugger<'a> {
     fn process_input(&mut self, input: &str) {
         match input {
             "status" => println!("{}", self.cpu),
-            "next" => self.cpu.tick(),
+            "next" => { self.cpu.tick(); },
             "exit" => self.must_exit = true,
             _ => {}
         }
