@@ -40,6 +40,12 @@ impl MainMemory {
         mem
     }
 
+    pub fn read_bytes(&self, address: Address, offset: Address) -> Vec<Byte> {
+        self.mem[
+            (address as usize)..(address as usize + offset as usize)
+        ].to_vec()
+    }
+
     fn load_fontset(&mut self) {
         // 0
         &self.mem[0..5].copy_from_slice(&[0xF0, 0x90, 0x90, 0x90, 0xF0]);

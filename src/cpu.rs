@@ -56,7 +56,7 @@ impl CPU {
         decode_instruction(instr)
     }
 
-    fn execute(&mut self, data: InstructionData, _bus: &mut Bus) -> Address {
+    fn execute(&mut self, data: InstructionData, bus: &mut Bus) -> Address {
         use InstructionData::*;
 
         match data {
@@ -82,10 +82,16 @@ impl CPU {
                     self.pc += 2;
                 }
             },
+            Drw(x, y, n) => {
+                let pos = (x as usize, y as usize);
+                let bytes = bus.read_bytes(self.i, n as Address);
+                bus.display_sprite(pos, &bytes[..]);
+            },
             LdF(x) => {
                 let font_index: Byte = self.registers[x as usize];
                 self.i = (font_index * 5) as u16;
             },
+            Unknown => panic!("Illegal instruction, aborting..."),
             _ => {}
         }
 

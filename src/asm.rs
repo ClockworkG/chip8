@@ -54,6 +54,7 @@ pub fn decode_instruction(instruction: Instruction) -> InstructionData {
             match n {
                 0x0E0 => InstructionData::Cls,
                 0x0EE => InstructionData::Ret,
+                0x000 => InstructionData::Unknown,
                 n => InstructionData::Sys(n),
             }
         },

@@ -14,6 +14,28 @@ impl FrameBuffer {
             buffer: [0x0; FRAME_HEIGHT]
         }
     }
+
+    fn write_byte(&mut self, x: &mut usize, y: &mut usize, byte: Byte) {
+        let mut mask = 0b10000000;
+        for i in 0..8 {
+            let bit = (byte & mask) >> (7 - i);
+            self.write((*x, *y), bit != 0);
+            mask >>= 1;
+            *x += 1;
+            if *x == 64 {
+                *x = 0;
+                *y += 1;
+            }
+        }
+    }
+
+    pub fn write_bytes(&mut self, pos: <Self as Memory>::Address, bytes: &[Byte]) {
+        let (mut x, mut y) = pos;
+
+        for byte in bytes {
+            self.write_byte(&mut x, &mut y, *byte);
+        }
+    }
 }
 
 impl Memory for FrameBuffer {
