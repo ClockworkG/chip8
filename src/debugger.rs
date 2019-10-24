@@ -24,17 +24,6 @@ impl Debugger {
     fn prompt(&mut self) -> Result<String, ()> {
         use termion::{color, style};
 
-        let instrs = self.get_execution_context(1);
-        for (addr, instr) in instrs {
-            if addr == self.current_pc {
-                print!("{:<4}{}", "->", color::Fg(color::Green));
-            } else {
-                print!("{:<4}", "");
-            }
-
-            println!("{:#05X}   {}{}", addr, instr, style::Reset);
-        }
-
         let readline = self.editor.readline(
             format!("{}{}{} ", color::Fg(color::Blue), PROMPT, style::Reset).as_str()
         );
@@ -66,14 +55,39 @@ impl Debugger {
         instrs
     }
 
+    fn show_context(&self) {
+        use termion::{color, style};
+
+        let instrs = self.get_execution_context(1);
+        for (addr, instr) in instrs {
+            if addr == self.current_pc {
+                print!("{:<4}{}", "->", color::Fg(color::Green));
+            } else {
+                print!("{:<4}", "");
+            }
+
+            println!("{:#05X}   {}{}", addr, instr, style::Reset);
+        }
+    }
+
     fn process_input(&mut self, input: &str) {
         match input {
             "status" => println!("{}", self.cpu),
             "next" => {
                 self.current_pc = self.cpu.tick(&mut self.bus);
+                self.show_context();
             },
-            "exit" => self.must_exit = true,
-            _ => {}
+            "ctx" => {
+                self.show_context();
+            },
+            "screen" => {
+                let buffer = self.bus.get_frame_buffer();
+                println!("{}", buffer);
+            },
+            "exit" | "quit" => self.must_exit = true,
+            _ => {
+                println!("Command not found: {}", input);
+            }
         }
     }
 }
@@ -91,6 +105,7 @@ impl Context for Debugger {
     }
 
     fn run(&mut self) {
+        self.show_context();
         while let Ok(line) = self.prompt() {
             self.process_input(&line);
             if self.must_exit {

@@ -71,6 +71,7 @@ impl CPU {
                 self.stack[self.sp as usize] = self.pc;
                 self.pc = n;
             },
+            Ld(x, n) => self.registers[x as usize] = n,
             LdI(n) => self.i = n,
             Rnd(x, n) => {
                 let random: u16 = self.random_device.gen_range(0, 256);
@@ -80,6 +81,10 @@ impl CPU {
                 if self.registers[x as usize] == n {
                     self.pc += 2;
                 }
+            },
+            LdF(x) => {
+                let font_index: Byte = self.registers[x as usize];
+                self.i = (font_index * 5) as u16;
             },
             _ => {}
         }

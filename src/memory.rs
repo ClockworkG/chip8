@@ -3,13 +3,14 @@ use std::fs::File;
 use std::io;
 use std::io::Read;
 
-use crate::specs::{Byte, MEMORY_SIZE, PROGRAM_BEGIN};
+use crate::specs::{Byte, MEMORY_SIZE, PROGRAM_BEGIN, Address};
 
 pub trait Memory {
     type Address;
+    type Value;
 
-    fn read(&self, address: Self::Address) -> Byte;
-    fn write(&mut self, address: Self::Address, value: Byte);
+    fn read(&self, address: Self::Address) -> Self::Value;
+    fn write(&mut self, address: Self::Address, value: Self::Value);
 }
 
 pub struct MainMemory {
@@ -21,6 +22,12 @@ pub struct ROM {
 }
 
 impl MainMemory {
+    pub fn new() -> Self {
+        MainMemory {
+            mem: [0x0; MEMORY_SIZE]
+        }
+    }
+
     pub fn with_rom(rom: ROM) -> Self {
         let mut mem = [0x0; MEMORY_SIZE];
 
@@ -85,16 +92,17 @@ impl MainMemory {
 }
 
 impl Memory for MainMemory {
-    type Address = u16;
+    type Address = Address;
+    type Value = Byte;
 
-    fn read(&self, address: Self::Address) -> Byte {
+    fn read(&self, address: Self::Address) -> Self::Value {
         let real_address = address as usize;
 
         assert!(real_address < MEMORY_SIZE, "Address out of memory space.");
         self.mem[real_address]
     }
 
-    fn write(&mut self, address: Self::Address, value: Byte) {
+    fn write(&mut self, address: Self::Address, value: Self::Value) {
         let real_address = address as usize;
 
         assert!(real_address < MEMORY_SIZE, "Address out of memory space.");
