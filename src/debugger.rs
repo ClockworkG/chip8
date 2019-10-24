@@ -17,7 +17,8 @@ pub struct Debugger {
     bus: Bus,
     must_exit: bool,
     editor: Editor<()>,
-    current_pc: Address
+    current_pc: Address,
+    need_input: bool,
 }
 
 impl Debugger {
@@ -73,6 +74,9 @@ impl Debugger {
     fn process_input(&mut self, input: &str) {
         match input {
             "status" => println!("{}", self.cpu),
+            "run" => {
+                self.need_input = false;
+            },
             "next" => {
                 self.current_pc = self.cpu.tick(&mut self.bus);
                 self.show_context();
@@ -104,14 +108,22 @@ impl Context for Debugger {
             editor: Editor::<()>::new(),
             must_exit: false,
             bus: Bus::new(mem),
+            need_input: true,
             current_pc: PROGRAM_BEGIN as u16
         }
     }
 
     fn run(&mut self) {
         self.show_context();
-        while let Ok(line) = self.prompt() {
-            self.process_input(&line);
+        loop {
+            if self.need_input {
+                if let Ok(line) = self.prompt() {
+                    self.process_input(&line);
+                }
+            } else {
+                self.cpu.tick(&mut self.bus);
+            }
+
             if self.must_exit {
                 break
             }
