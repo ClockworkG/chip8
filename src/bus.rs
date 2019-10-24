@@ -2,7 +2,7 @@ use crate::memory::{MainMemory, Memory, merge_bytes};
 use crate::specs::{Address, Instruction};
 
 pub struct Bus {
-    memory: MainMemory
+    memory: MainMemory,
 }
 
 impl Bus {

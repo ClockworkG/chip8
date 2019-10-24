@@ -28,9 +28,59 @@ impl MainMemory {
         let sup_bound = PROGRAM_BEGIN + rom.size();
         &mem[inf_bound..sup_bound].copy_from_slice(rom.bytes());
 
-        MainMemory {
-            mem
-        }
+        let mut mem = MainMemory { mem };
+        mem.load_fontset();
+        mem
+    }
+
+    fn load_fontset(&mut self) {
+        // 0
+        &self.mem[0..5].copy_from_slice(&[0xF0, 0x90, 0x90, 0x90, 0xF0]);
+
+        // 1
+        &self.mem[5..10].copy_from_slice(&[0x20, 0x60, 0x20, 0x20, 0x70]);
+
+        // 2
+        &self.mem[10..15].copy_from_slice(&[0xF0, 0x10, 0xF0, 0x80, 0xF0]);
+
+        // 3
+        &self.mem[15..20].copy_from_slice(&[0xF0, 0x10, 0xF0, 0x10, 0xF0]);
+
+        // 4
+        &self.mem[15..20].copy_from_slice(&[0xF0, 0x10, 0xF0, 0x10, 0xF0]);
+
+        // 5
+        &self.mem[20..25].copy_from_slice(&[0xF0, 0x80, 0xF0, 0x10, 0xF0]);
+
+        // 6
+        &self.mem[25..30].copy_from_slice(&[0xF0, 0x80, 0xF0, 0x90, 0xF0]);
+
+        // 7
+        &self.mem[30..35].copy_from_slice(&[0xF0, 0x10, 0x20, 0x40, 0x40]);
+
+        // 8
+        &self.mem[35..40].copy_from_slice(&[0xF0, 0x90, 0xF0, 0x90, 0xF0]);
+
+        // 9
+        &self.mem[40..45].copy_from_slice(&[0xF0, 0x90, 0xF0, 0x10, 0xF0]);
+
+        // A
+        &self.mem[45..50].copy_from_slice(&[0xF0, 0x90, 0xF0, 0x90, 0x90]);
+
+        // B
+        &self.mem[50..55].copy_from_slice(&[0xE0, 0x90, 0xE0, 0x90, 0xE0]);
+
+        // C
+        &self.mem[55..60].copy_from_slice(&[0xF0, 0x80, 0x80, 0x80, 0xF0]);
+
+        // D
+        &self.mem[60..65].copy_from_slice(&[0xE0, 0x90, 0x90, 0x90, 0xE0]);
+
+        // E
+        &self.mem[65..70].copy_from_slice(&[0xF0, 0x80, 0xF0, 0x80, 0xF0]);
+
+        // F
+        &self.mem[70..75].copy_from_slice(&[0xF0, 0x80, 0xF0, 0x80, 0x80]);
     }
 }
 
@@ -66,12 +116,6 @@ impl ROM {
         Ok(ROM {
             data: bytes,
         })
-    }
-
-    pub fn from_bytes(bytes: &[u8]) -> Self {
-        ROM {
-            data: bytes.to_vec()
-        }
     }
 
     pub fn size(&self) -> usize {
