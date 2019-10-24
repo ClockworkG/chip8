@@ -19,6 +19,20 @@ pub struct Debugger {
     editor: Editor<()>,
     current_pc: Address,
     need_input: bool,
+    breakpoints: Vec<Address>,
+}
+
+enum DebuggerCommand {
+    Start,
+    Break(Address),
+    Run,
+    Status,
+    Next,
+    Ctx,
+    Screen,
+    Empty,
+    Quit,
+    Dump,
 }
 
 impl Debugger {
@@ -31,9 +45,45 @@ impl Debugger {
         match readline {
             Ok(line) => {
                 self.editor.add_history_entry(line.as_str());
-                Ok(line)
+                Ok(line.trim_end().to_owned())
             },
             Err(_) => Err(())
+        }
+    }
+
+    fn parse_input(line: &str) -> Result<DebuggerCommand, String> {
+        use DebuggerCommand::*;
+
+        let mut tokens = line.split(" ").into_iter();
+
+        if let Some(tok) = tokens.next() {
+            Ok(match tok {
+                "ctx" => Ctx,
+                "next" | "n" => Next,
+                "run" | "r" => Run,
+                "start" => Start,
+                "dump" => Dump,
+                "screen" => Screen,
+                "status" => Status,
+                "quit" | "exit" | "q" => Quit,
+                "break" | "b" => {
+                    if let Some(tok) = tokens.next() {
+                        let processed = tok.trim_start_matches("0x");
+                        let parsed = u16::from_str_radix(processed, 16);
+                        if let Ok(addr) = parsed {
+                            Break(addr)
+                        } else {
+                            return Err("Error while parsing address.".to_owned())
+                        }
+                    } else {
+                        return Err("Missing argument after break".to_owned())
+                    }
+                },
+                "" => Empty,
+                _ => return Err(format!("Unknown command: {}", tok)),
+            })
+        } else {
+            Err("Unknown error".to_owned())
         }
     }
 
@@ -72,29 +122,36 @@ impl Debugger {
     }
 
     fn process_input(&mut self, input: &str) {
-        match input {
-            "status" => println!("{}", self.cpu),
-            "run" => {
-                self.need_input = false;
+        use DebuggerCommand::*;
+
+        let res = Debugger::parse_input(input);
+        match res {
+            Ok(cmd) => {
+                match cmd {
+                    Empty => {},
+                    Status => println!("{}", self.cpu),
+                    Run => self.need_input = false,
+                    Ctx => self.show_context(),
+                    Dump => println!("{}", self.bus.get_ram()),
+                    Next => {
+                        self.current_pc = self.cpu.tick(&mut self.bus);
+                        self.show_context();
+                    },
+                    Screen => println!("{}", self.bus.get_frame_buffer()),
+                    Quit => {
+                        self.must_exit = true;
+                    },
+                    Break(addr) => {
+                        println!("Setting breakpoint at {:#05x}.", addr);
+                        self.breakpoints.push(addr);
+                    },
+                    Unknown => {
+                        println!("Command not found: {}", input);
+                    },
+                }
             },
-            "next" => {
-                self.current_pc = self.cpu.tick(&mut self.bus);
-                self.show_context();
-            },
-            "ctx" => {
-                self.show_context();
-            },
-            "dump" => {
-                let mem = self.bus.get_ram();
-                println!("{}", mem);
-            },
-            "screen" => {
-                let buffer = self.bus.get_frame_buffer();
-                println!("{}", buffer);
-            },
-            "exit" | "quit" => self.must_exit = true,
-            _ => {
-                println!("Command not found: {}", input);
+            Err(err) => {
+                println!("{}", err);
             }
         }
     }
@@ -109,7 +166,8 @@ impl Context for Debugger {
             must_exit: false,
             bus: Bus::new(mem),
             need_input: true,
-            current_pc: PROGRAM_BEGIN as u16
+            current_pc: PROGRAM_BEGIN as u16,
+            breakpoints: Vec::new(),
         }
     }
 
@@ -121,7 +179,13 @@ impl Context for Debugger {
                     self.process_input(&line);
                 }
             } else {
-                self.cpu.tick(&mut self.bus);
+                self.current_pc = self.cpu.tick(&mut self.bus);
+                if self.breakpoints.contains(&self.current_pc) {
+                    self.need_input = true;
+                    self.show_context();
+                    println!("Stopped on breakpoint at {:#05X}.", self.current_pc);
+                }
+
             }
 
             if self.must_exit {
