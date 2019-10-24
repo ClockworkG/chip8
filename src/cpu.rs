@@ -83,9 +83,10 @@ impl CPU {
                 }
             },
             Drw(x, y, n) => {
-                let pos = (x as usize, y as usize);
+                let x = self.registers[x as usize] as usize;
+                let y = self.registers[y as usize] as usize;
                 let bytes = bus.read_bytes(self.i, n as Address);
-                bus.display_sprite(pos, &bytes[..]);
+                bus.display_sprite((x, y), &bytes[..]);
             },
             LdF(x) => {
                 let font_index: Byte = self.registers[x as usize];

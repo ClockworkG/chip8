@@ -24,7 +24,7 @@ impl FrameBuffer {
             *x += 1;
             if *x == 64 {
                 *x = 0;
-                *y += 1;
+                *y = (*y + 1) % 32;
             }
         }
     }
