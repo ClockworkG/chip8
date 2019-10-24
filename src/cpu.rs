@@ -92,6 +92,12 @@ impl CPU {
                 let font_index: Byte = self.registers[x as usize];
                 self.i = (font_index * 5) as u16;
             },
+            LdReg(x, y) => {
+                self.registers[x as usize] = self.registers[y as usize];
+            },
+            Add(x, n) => {
+                self.registers[x as usize] += n;
+            },
             Unknown => panic!("Illegal instruction, aborting..."),
             _ => {}
         }
