@@ -1,6 +1,6 @@
-use crate::cpu::CPU;
+use crate::memory::ROM;
 
-pub trait Context<'a> {
-    fn with_cpu(cpu: &'a mut CPU) -> Self;
+pub trait Context {
+    fn new(rom: ROM) -> Self;
     fn run(&mut self);
 }

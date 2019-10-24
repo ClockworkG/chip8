@@ -2,19 +2,22 @@ extern crate rustyline;
 
 use crate::context::Context;
 use crate::cpu::CPU;
+use crate::memory::{MainMemory, ROM};
+use crate::bus::Bus;
 
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
 static PROMPT: &str = "(chip8-debug) ";
 
-pub struct Debugger<'a> {
-    cpu: &'a mut CPU,
+pub struct Debugger {
+    cpu: CPU,
+    bus: Bus,
     must_exit: bool,
     editor: Editor<()>
 }
 
-impl<'a> Debugger<'a> {
+impl Debugger {
     fn prompt(&mut self) -> Result<String, ()> {
         let readline = self.editor.readline(PROMPT);
         match readline {
@@ -29,19 +32,21 @@ impl<'a> Debugger<'a> {
     fn process_input(&mut self, input: &str) {
         match input {
             "status" => println!("{}", self.cpu),
-            "next" => { self.cpu.tick(); },
+            "next" => { self.cpu.tick(&mut self.bus); },
             "exit" => self.must_exit = true,
             _ => {}
         }
     }
 }
 
-impl<'a> Context<'a> for Debugger<'a> {
-    fn with_cpu(cpu: &'a mut CPU) -> Self {
+impl Context for Debugger {
+    fn new(rom: ROM) -> Self {
+        let mem = MainMemory::with_rom(rom);
         Debugger {
-            cpu,
+            cpu: CPU::new(),
             editor: Editor::<()>::new(),
             must_exit: false,
+            bus: Bus::new(mem)
         }
     }
 

@@ -10,14 +10,14 @@ use crate::specs::{
     PROGRAM_BEGIN,
 };
 use crate::memory::{
-    Memory,
-    MainMemory,
     merge_bytes,
+    Memory,
 };
 use crate::asm::{
     InstructionData,
     decode_instruction,
 };
+use crate::bus::Bus;
 use std::fmt;
 use rand::Rng;
 use rand::prelude::ThreadRng;
@@ -30,8 +30,6 @@ pub struct CPU {
     stack: [Address; STACK_SIZE],
     sp: Register<Byte>,
 
-    memory: MainMemory,
-
     delay_timer: Byte,
     sound_timer: Byte,
 
@@ -39,23 +37,22 @@ pub struct CPU {
 }
 
 impl CPU {
-    pub fn new(memory: MainMemory) -> Self {
+    pub fn new() -> Self {
         CPU {
             i: 0x0,
             pc: PROGRAM_BEGIN as Address,
             registers: [0x0; REGISTERS_COUNT],
             stack: [0x0; STACK_SIZE],
             sp: 0x0,
-            memory: memory,
             delay_timer: 0,
             sound_timer: 0,
             random_device: rand::thread_rng(),
         }
     }
 
-    fn fetch(&mut self) -> Instruction {
-        let left = self.memory.read(self.pc);
-        let right = self.memory.read(self.pc + 1);
+    fn fetch(&mut self, bus: &mut Bus) -> Instruction {
+        let left = bus.read(self.pc);
+        let right = bus.read(self.pc + 1);
         self.pc += 2;
 
         merge_bytes(left, right)
@@ -65,7 +62,7 @@ impl CPU {
         decode_instruction(instr)
     }
 
-    fn execute(&mut self, data: InstructionData) -> Address {
+    fn execute(&mut self, data: InstructionData, bus: &mut Bus) -> Address {
         use InstructionData::*;
 
         match data {
@@ -96,10 +93,10 @@ impl CPU {
         self.pc
     }
 
-    pub fn tick(&mut self) -> Address {
-        let instr = self.fetch();
+    pub fn tick(&mut self, bus: &mut Bus) -> Address {
+        let instr = self.fetch(bus);
         let data = self.decode(instr);
-        self.execute(data)
+        self.execute(data, bus)
     }
 }
 

@@ -5,6 +5,7 @@ mod cpu;
 mod cli;
 mod context;
 mod debugger;
+mod bus;
 
 extern crate clap;
 
