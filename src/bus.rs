@@ -1,5 +1,5 @@
-use crate::memory::{MainMemory, Memory};
-use crate::specs::{Address, Byte};
+use crate::memory::{MainMemory, Memory, merge_bytes};
+use crate::specs::{Address, Instruction};
 
 pub struct Bus {
     memory: MainMemory
@@ -11,16 +11,10 @@ impl Bus {
             memory
         }
     }
-}
 
-impl Memory for Bus {
-    type Address = Address;
-
-    fn read(&self, address: Self::Address) -> Byte {
-        self.memory.read(address)
-    }
-
-    fn write(&mut self, address: Self::Address, value: Byte) {
-        self.memory.write(address, value);
+    pub fn read_instruction(&self, address: Address) -> Instruction {
+        let left = self.memory.read(address);
+        let right = self.memory.read(address + 1);
+        merge_bytes(left, right)
     }
 }

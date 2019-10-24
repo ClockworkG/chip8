@@ -9,10 +9,6 @@ use crate::specs::{
     STACK_SIZE,
     PROGRAM_BEGIN,
 };
-use crate::memory::{
-    merge_bytes,
-    Memory,
-};
 use crate::asm::{
     InstructionData,
     decode_instruction,
@@ -51,18 +47,16 @@ impl CPU {
     }
 
     fn fetch(&mut self, bus: &mut Bus) -> Instruction {
-        let left = bus.read(self.pc);
-        let right = bus.read(self.pc + 1);
+        let instr = bus.read_instruction(self.pc);
         self.pc += 2;
-
-        merge_bytes(left, right)
+        instr
     }
 
     fn decode(&mut self, instr: Instruction) -> InstructionData {
         decode_instruction(instr)
     }
 
-    fn execute(&mut self, data: InstructionData, bus: &mut Bus) -> Address {
+    fn execute(&mut self, data: InstructionData, _bus: &mut Bus) -> Address {
         use InstructionData::*;
 
         match data {
