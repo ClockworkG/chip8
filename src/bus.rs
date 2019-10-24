@@ -32,4 +32,8 @@ impl Bus {
     pub fn get_frame_buffer(&self) -> &FrameBuffer {
         &self.frame_buffer
     }
+
+    pub fn get_ram(&self) -> &MainMemory {
+        &self.memory
+    }
 }

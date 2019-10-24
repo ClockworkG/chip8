@@ -80,6 +80,10 @@ impl Debugger {
             "ctx" => {
                 self.show_context();
             },
+            "dump" => {
+                let mem = self.bus.get_ram();
+                println!("{}", mem);
+            },
             "screen" => {
                 let buffer = self.bus.get_frame_buffer();
                 println!("{}", buffer);

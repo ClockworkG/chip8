@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::fmt;
 use std::fs::File;
 use std::io;
 use std::io::Read;
@@ -147,6 +148,35 @@ impl ROM {
                     merge_bytes(left, right)
                  })
                  .collect()
+    }
+}
+
+impl fmt::Display for MainMemory {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use termion::{color, style};
+
+        let bytes = self.read_bytes(0x000, 0x1000);
+
+        write!(f, "       ")?;
+        for i in 0..16 {
+            write!(f, "{:<4X} ", i * 2)?;
+        }
+        write!(f, "\n")?;
+
+        for (idx, byte_pack) in bytes.chunks(32).enumerate() {
+            write!(f, "{:#05X}  ", idx * 32)?;
+            for byte in byte_pack.chunks(2) {
+                if byte[0] == 0x0 && byte[1] == 0x0 {
+                    write!(f, "{}", color::Fg(color::Red))?;
+                }
+                write!(f, "{:02x}", byte[0])?;
+                write!(f, "{:02x} ", byte[1])?;
+                write!(f, "{}", style::Reset)?;
+            }
+            write!(f, "\n")?;
+        }
+
+        Ok(())
     }
 }
 
