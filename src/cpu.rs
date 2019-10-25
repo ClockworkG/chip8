@@ -239,8 +239,7 @@ impl CPU {
                     self.set_reg(idx as u8, *byte);
                 }
             },
-            Unknown => panic!("Illegal instruction, aborting..."),
-            _ => {}
+            _ => panic!("Illegal instruction, aborting..."),
         }
 
         self.pc
@@ -253,9 +252,6 @@ impl CPU {
     }
 
     pub fn timer_decrement(&mut self) {
-        let dt = self.delay_timer;
-        let st = self.sound_timer;
-
         if self.delay_timer > 0 {
             self.delay_timer -= 1;
         }

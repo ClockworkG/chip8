@@ -23,12 +23,6 @@ pub struct ROM {
 }
 
 impl MainMemory {
-    pub fn new() -> Self {
-        MainMemory {
-            mem: [0x0; MEMORY_SIZE]
-        }
-    }
-
     pub fn with_rom(rom: ROM) -> Self {
         let mut mem = [0x0; MEMORY_SIZE];
 

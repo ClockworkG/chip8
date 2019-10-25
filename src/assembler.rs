@@ -69,7 +69,7 @@ fn word_to_token(word: &str) -> Token {
     }
 }
 
-fn tokens_to_bytecode(tokens: &[Token]) -> Bytecode {
+fn tokens_to_bytecode(_tokens: &[Token]) -> Bytecode {
     Bytecode::new()
 }
 
