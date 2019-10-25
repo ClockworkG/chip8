@@ -25,6 +25,14 @@ impl Bus {
         self.memory.read_bytes(address, offset)
     }
 
+    pub fn write_bytes(&mut self, address: Address, bytes: &[Byte]) {
+        let mut addr = address;
+        for byte in bytes {
+            self.memory.write(addr, *byte);
+            addr += 1;
+        }
+    }
+
     pub fn display_sprite(&mut self, pos: (usize, usize), sprite: &[u8]) {
         self.frame_buffer.write_bytes(pos, sprite);
     }

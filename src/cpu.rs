@@ -118,15 +118,54 @@ impl CPU {
             And(x, y) => {
                 self.set_reg(x, self.get_reg(x) & self.get_reg(y));
             },
+            Xor(x, y) => {
+                self.set_reg(x, self.get_reg(x) ^ self.get_reg(y));
+            },
             AddReg(x, y) => {
                 let sum: u16 = self.get_reg(x) as u16 + self.get_reg(y) as u16;
                 let carry = sum % 256;
                 self.set_reg(x, (sum - carry) as u8);
+                self.set_reg(0xF, carry as u8);
             },
             SubReg(x, y) => {
-                self.set_reg(x, self.get_reg(x) - self.get_reg(y));
+                let x_val = self.get_reg(x);
+                let y_val = self.get_reg(y);
+                if x_val > y_val {
+                    self.set_reg(0xF, 1);
+                }
+                self.set_reg(x, x_val - y_val);
+            },
+            Shr(x, _) => {
+                let x_val = self.get_reg(x);
+                if x_val & 0b1 == 1 {
+                    self.set_reg(0xF, 1);
+                }
+                self.set_reg(x, x_val / 2);
+            },
+            SubN(x, y) => {
+                let x_val = self.get_reg(x);
+                let y_val = self.get_reg(y);
+                if y_val > x_val {
+                    self.set_reg(0xF, 1);
+                }
+                self.set_reg(x, y_val - x_val);
+            },
+            Shl(x, _) => {
+                let x_val = self.get_reg(x);
+                if x_val & 0b1000000 == 0b1000000 {
+                    self.set_reg(0xF, 1);
+                }
+                self.set_reg(x, x_val * 2);
+            },
+            SneReg(x, y) => {
+                if self.get_reg(x) != self.get_reg(y) {
+                    self.pc += 2;
+                }
             },
             LdI(n) => self.i = n,
+            JpV0(n) => {
+                self.pc = self.get_reg(0) as u16 + n;
+            },
             Rnd(x, n) => {
                 let random: u16 = self.random_device.gen_range(0, 256);
                 self.set_reg(x, (random as u8) & n);
@@ -137,9 +176,44 @@ impl CPU {
                 let bytes = bus.read_bytes(self.i, n as Address);
                 bus.display_sprite((x_val, y_val), &bytes[..]);
             },
+            Skp(x) => {
+                // FIXME
+            },
+            Sknp(x) => {
+                // FIXME
+            },
             LdF(x) => {
                 let font_index: Byte = self.get_reg(x);
                 self.i = (font_index * 5) as u16;
+            },
+            LdRegDt(x) => {
+                self.set_reg(x, self.delay_timer);
+            },
+            LdK(n) => {
+                // FIXME
+            },
+            LdDtReg(x) => {
+                self.delay_timer = self.get_reg(x);
+            },
+            LdSt(x) => {
+                self.sound_timer = self.get_reg(x);
+            },
+            AddI(x) => {
+                self.i = self.i + self.get_reg(x) as u16;
+            },
+            LdB(n) => {
+                // FIXME
+            },
+            LdIMem(x) => {
+                let loc = self.i;
+                bus.write_bytes(loc, &self.registers[0..x as usize]);
+            },
+            LdVx(x) => {
+                let loc = self.i;
+                let bytes = bus.read_bytes(loc, x as Address);
+                for (idx, byte) in bytes.iter().enumerate() {
+                    self.set_reg(idx as u8, *byte);
+                }
             },
             Unknown => panic!("Illegal instruction, aborting..."),
             _ => {}
