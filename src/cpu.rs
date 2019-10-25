@@ -79,7 +79,7 @@ impl CPU {
         use InstructionData::*;
 
         match data {
-            Cls => (),
+            Cls => bus.clear_screen(),
             Ret => {
                 if self.sp == 0 {
                     panic!("Invalid stack.");

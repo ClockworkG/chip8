@@ -48,6 +48,10 @@ impl Bus {
         self.frame_buffer.write_bytes(pos, sprite)
     }
 
+    pub fn clear_screen(&mut self) {
+        self.frame_buffer.clear();
+    }
+
     pub fn get_frame_buffer(&self) -> &FrameBuffer {
         &self.frame_buffer
     }

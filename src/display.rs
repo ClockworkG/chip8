@@ -17,9 +17,13 @@ impl FrameBuffer {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.buffer = [0x0; FRAME_HEIGHT];
+    }
+
     fn write_byte(&mut self, x: usize, y: usize, byte: Byte) {
-        let mut x_iter = x;
         let mut mask = 0b10000000;
+        let mut x_iter = x;
 
         for i in 0..8 {
             let bit = (byte & mask) >> (7 - i);
