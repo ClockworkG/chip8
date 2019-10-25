@@ -9,6 +9,7 @@ use crate::specs::{PROGRAM_BEGIN, Address};
 use crate::asm::{decode_instruction, InstructionData};
 
 use rustyline::Editor;
+use std::collections::HashMap;
 
 static PROMPT: &str = "(chip8-debug)";
 
@@ -20,11 +21,14 @@ pub struct Debugger {
     current_pc: Address,
     need_input: bool,
     breakpoints: Vec<Address>,
+    variables: HashMap<String, i32>,
 }
 
 enum DebuggerCommand {
     Start,
     Break(Address),
+    Set(String, i32),
+    Continue,
     Run,
     Status,
     Next,
@@ -59,6 +63,7 @@ impl Debugger {
         if let Some(tok) = tokens.next() {
             Ok(match tok {
                 "ctx" => Ctx,
+                "c" | "continue" => Continue,
                 "next" | "n" => Next,
                 "run" | "r" => Run,
                 "start" => Start,
@@ -66,6 +71,23 @@ impl Debugger {
                 "screen" => Screen,
                 "status" => Status,
                 "quit" | "exit" | "q" => Quit,
+                "set" => {
+                    if let Some(tok) = tokens.next() {
+                        let key = tok.to_owned();
+                        if let Some(tok) = tokens.next() {
+                            let value = i32::from_str_radix(tok, 10);
+                            if let Ok(val) = value {
+                                Set(key, val)
+                            } else {
+                                return Err("Unable to parse value.".to_owned())
+                            }
+                        } else {
+                            return Err("Missing value after key.".to_owned())
+                        }
+                    } else {
+                        return Err("Missing key after set".to_owned())
+                    }
+                },
                 "break" | "b" => {
                     if let Some(tok) = tokens.next() {
                         let processed = tok.trim_start_matches("0x");
@@ -87,8 +109,9 @@ impl Debugger {
         }
     }
 
-    fn get_execution_context(&self, size: u16) -> Vec<(Address, InstructionData)> {
+    fn get_execution_context(&self) -> Vec<(Address, InstructionData)> {
         let mut instrs: Vec<(Address, InstructionData)> = Vec::new();
+        let size = self.variables["context_span"] as u16;
 
         let mut addr = self.current_pc - (size * 2);
         while addr <= self.current_pc + (size * 2) {
@@ -109,7 +132,7 @@ impl Debugger {
     fn show_context(&self) {
         use termion::{color, style};
 
-        let instrs = self.get_execution_context(1);
+        let instrs = self.get_execution_context();
         for (addr, instr) in instrs {
             if addr == self.current_pc {
                 print!("{:<4}{}", "->", color::Fg(color::Green));
@@ -138,12 +161,16 @@ impl Debugger {
                         self.show_context();
                     },
                     Screen => println!("{}", self.bus.get_frame_buffer()),
+                    Continue => self.need_input = false,
                     Quit => {
                         self.must_exit = true;
                     },
                     Break(addr) => {
                         println!("Setting breakpoint at {:#05x}.", addr);
                         self.breakpoints.push(addr);
+                    },
+                    Set(key, value) => {
+                        self.variables.insert(key, value);
                     },
                     Unknown => {
                         println!("Command not found: {}", input);
@@ -160,6 +187,10 @@ impl Debugger {
 impl Context for Debugger {
     fn new(rom: ROM) -> Self {
         let mem = MainMemory::with_rom(rom);
+        let mut variables = HashMap::new();
+
+        variables.insert("context_span".to_owned(), 2);
+
         Debugger {
             cpu: CPU::new(),
             editor: Editor::<()>::new(),
@@ -168,6 +199,7 @@ impl Context for Debugger {
             need_input: true,
             current_pc: PROGRAM_BEGIN as u16,
             breakpoints: Vec::new(),
+            variables
         }
     }
 
