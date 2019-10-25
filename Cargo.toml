@@ -6,3 +6,6 @@ edition = "2018"
 
 [dependencies]
 clap = "*"
+rustyline = "*"
+termion = "*"
+rand = "0.7"
