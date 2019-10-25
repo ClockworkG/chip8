@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io;
 use std::io::Read;
 
-use crate::specs::{Byte, MEMORY_SIZE, PROGRAM_BEGIN, Address};
+use crate::specs::{Byte, MEMORY_SIZE, PROGRAM_BEGIN, Address, MAX_ROM_SIZE};
 
 pub trait Memory {
     type Address;
@@ -121,6 +121,7 @@ impl ROM {
         let mut file = File::open(path)?;
 
         file.read_to_end(&mut bytes)?;
+        assert!(bytes.len() < MAX_ROM_SIZE, "ROM exceeds max size.");
 
         Ok(ROM {
             data: bytes,

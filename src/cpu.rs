@@ -80,6 +80,7 @@ impl CPU {
 
         match data {
             Cls => bus.clear_screen(),
+            Sys(_) => {},
             Ret => {
                 if self.sp == 0 {
                     panic!("Invalid stack.");
