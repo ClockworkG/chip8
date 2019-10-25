@@ -81,13 +81,16 @@ impl CPU {
         match data {
             Cls => (),
             Ret => {
-                self.pc = self.stack[self.sp as usize];
+                if self.sp == 0 {
+                    panic!("Invalid stack.");
+                }
+                self.pc = self.stack[(self.sp - 1) as usize];
                 self.sp -= 1;
             },
             Jp(n) => self.pc = n,
             Call(n) => {
-                self.sp += 1;
                 self.stack[self.sp as usize] = self.pc;
+                self.sp += 1;
                 self.pc = n;
             },
             Se(x, n) => {
@@ -251,7 +254,7 @@ impl fmt::Display for CPU {
         write!(f, "\nStack: ")?;
 
         for (idx, val) in self.stack.iter().enumerate() {
-            if (idx as u8) == self.sp {
+            if self.sp != 0 && (idx as u8) == self.sp - 1 {
                 write!(f, "[ {}{:#05x}{} ]",
                        style::Bold, val, style::Reset)?;
             } else {

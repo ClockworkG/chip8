@@ -113,7 +113,11 @@ impl Debugger {
         let mut instrs: Vec<(Address, InstructionData)> = Vec::new();
         let size = self.variables["context_span"] as u16;
 
-        let mut addr = self.current_pc - (size * 2);
+        let mut addr = if size * 2 > self.current_pc {
+            0
+        } else {
+            self.current_pc - (size * 2)
+        };
         while addr <= self.current_pc + (size * 2) {
             if addr < (PROGRAM_BEGIN as u16) {
                 addr += 2;
