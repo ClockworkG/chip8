@@ -1,11 +1,16 @@
 use std::path::{Path};
+use std::fs::File;
+use std::io::Write;
 
 use crate::asm;
+use crate::assembler;
 
 use crate::memory;
 use crate::debugger;
 use crate::window;
 use crate::context::Context;
+
+use std::fs;
 
 pub mod error {
     use std::io;
@@ -33,6 +38,14 @@ pub fn emulate(path: &Path, debug: bool) -> Result<(), error::CLIError> {
         window.run();
     }
 
+    Ok(())
+}
+
+pub fn assemble(path: &Path, output: &Path) -> Result<(), error::CLIError> {
+    let source = fs::read_to_string(path)?;
+    let bytecode = assembler::source_to_bytecode(source.as_str());
+    let mut output_file = fs::File::create(output)?;
+    output_file.write(&bytecode[..])?;
     Ok(())
 }
 
