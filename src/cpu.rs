@@ -4,6 +4,7 @@ use crate::specs::{
     Register,
     Byte,
     Address,
+    Nibble,
     Instruction,
     REGISTERS_COUNT,
     STACK_SIZE,
@@ -56,6 +57,14 @@ impl CPU {
         self.sound_timer = 0;
     }
 
+    fn get_reg(&self, index: Nibble) -> Byte {
+        self.registers[index as usize]
+    }
+
+    fn set_reg(&mut self, index: Nibble, value: Byte) {
+        self.registers[index as usize] = value;
+    }
+
     fn fetch(&mut self, bus: &mut Bus) -> Instruction {
         let instr = bus.read_instruction(self.pc);
         self.pc += 2;
@@ -81,32 +90,56 @@ impl CPU {
                 self.stack[self.sp as usize] = self.pc;
                 self.pc = n;
             },
-            Ld(x, n) => self.registers[x as usize] = n,
-            LdI(n) => self.i = n,
-            Rnd(x, n) => {
-                let random: u16 = self.random_device.gen_range(0, 256);
-                self.registers[x as usize] = (random as u8) & n;
-            },
             Se(x, n) => {
-                if self.registers[x as usize] == n {
+                if self.get_reg(x) == n {
                     self.pc += 2;
                 }
             },
-            Drw(x, y, n) => {
-                let x = self.registers[x as usize] as usize;
-                let y = self.registers[y as usize] as usize;
-                let bytes = bus.read_bytes(self.i, n as Address);
-                bus.display_sprite((x, y), &bytes[..]);
+            Sne(x, n) => {
+                if self.get_reg(x) != n {
+                    self.pc += 2;
+                }
             },
-            LdF(x) => {
-                let font_index: Byte = self.registers[x as usize];
-                self.i = (font_index * 5) as u16;
+            SeReg(x, y) => {
+                if self.get_reg(x) == self.get_reg(y) {
+                    self.pc += 2;
+                }
+            },
+            Ld(x, n) => self.registers[x as usize] = n,
+            Add(x, n) => {
+                self.set_reg(x, self.get_reg(x) + n);
             },
             LdReg(x, y) => {
-                self.registers[x as usize] = self.registers[y as usize];
+                self.set_reg(x, self.get_reg(y));
             },
-            Add(x, n) => {
-                self.registers[x as usize] += n;
+            Or(x, y) => {
+                self.set_reg(x, self.get_reg(x) | self.get_reg(y));
+            },
+            And(x, y) => {
+                self.set_reg(x, self.get_reg(x) & self.get_reg(y));
+            },
+            AddReg(x, y) => {
+                let sum: u16 = self.get_reg(x) as u16 + self.get_reg(y) as u16;
+                let carry = sum % 256;
+                self.set_reg(x, (sum - carry) as u8);
+            },
+            SubReg(x, y) => {
+                self.set_reg(x, self.get_reg(x) - self.get_reg(y));
+            },
+            LdI(n) => self.i = n,
+            Rnd(x, n) => {
+                let random: u16 = self.random_device.gen_range(0, 256);
+                self.set_reg(x, (random as u8) & n);
+            },
+            Drw(x, y, n) => {
+                let x_val = self.get_reg(x) as usize;
+                let y_val = self.get_reg(y) as usize;
+                let bytes = bus.read_bytes(self.i, n as Address);
+                bus.display_sprite((x_val, y_val), &bytes[..]);
+            },
+            LdF(x) => {
+                let font_index: Byte = self.get_reg(x);
+                self.i = (font_index * 5) as u16;
             },
             Unknown => panic!("Illegal instruction, aborting..."),
             _ => {}
