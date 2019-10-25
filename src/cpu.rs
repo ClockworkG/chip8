@@ -46,6 +46,16 @@ impl CPU {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.i = 0x0;
+        self.pc = PROGRAM_BEGIN as Address;
+        self.registers = [0x0; REGISTERS_COUNT];
+        self.stack = [0x0; STACK_SIZE];
+        self.sp = 0x0;
+        self.delay_timer = 0;
+        self.sound_timer = 0;
+    }
+
     fn fetch(&mut self, bus: &mut Bus) -> Instruction {
         let instr = bus.read_instruction(self.pc);
         self.pc += 2;

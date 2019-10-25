@@ -153,7 +153,10 @@ impl Debugger {
                 match cmd {
                     Empty => {},
                     Status => println!("{}", self.cpu),
-                    Run => self.need_input = false,
+                    Run => {
+                        self.need_input = false;
+                        self.cpu.reset();
+                    },
                     Ctx => self.show_context(),
                     Dump => println!("{}", self.bus.get_ram()),
                     Next => {
