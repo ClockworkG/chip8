@@ -43,8 +43,17 @@ pub fn emulate(path: &Path, debug: bool) -> Result<(), error::CLIError> {
 pub fn assemble(path: &Path, output: &Path) -> Result<(), error::CLIError> {
     let source = fs::read_to_string(path)?;
     let bytecode = assembler::source_to_bytecode(source.as_str());
-    let mut output_file = fs::File::create(output)?;
-    output_file.write(&bytecode[..])?;
+
+    match bytecode {
+        Ok(bytecode) => {
+            let mut output_file = fs::File::create(output)?;
+            output_file.write(&bytecode[..])?;
+        },
+        Err(err) => {
+            eprintln!("{}", err);
+        },
+    };
+
     Ok(())
 }
 

@@ -1,4 +1,22 @@
+use std::fmt;
+
 pub type Bytecode = Vec<u8>;
+
+#[derive(Debug)]
+pub enum AssemblerError {
+    ExpectedInstruction,
+}
+
+impl fmt::Display for AssemblerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            AssemblerError::ExpectedInstruction => {
+                write!(f, "An expression was expected.")?
+            },
+        }
+        Ok(())
+    }
+}
 
 #[derive(Debug)]
 enum Mnemonic {
@@ -28,6 +46,12 @@ enum Mnemonic {
 enum Token {
     Instruction(Mnemonic),
     Register(u8),
+    RegisterF,
+    RegisterI,
+    DerefRegisterI,
+    RegisterB,
+    RegisterST,
+    RegisterDT,
     Unknown,
 }
 
@@ -55,6 +79,12 @@ fn word_to_token(word: &str) -> Token {
         "drw" => Instruction(Mnemonic::DRW),
         "skp" => Instruction(Mnemonic::SKP),
         "sknp" => Instruction(Mnemonic::SKNP),
+        "i" => RegisterI,
+        "f" => RegisterF,
+        "[i]" => DerefRegisterI,
+        "b" => RegisterB,
+        "st" => RegisterST,
+        "dt" => RegisterDT,
         tok_word => {
             use regex::Regex;
             let re = Regex::new(r"v(?P<id>[0-9a-f])").unwrap();
@@ -69,19 +99,46 @@ fn word_to_token(word: &str) -> Token {
     }
 }
 
-fn tokens_to_bytecode(_tokens: &[Token]) -> Bytecode {
-    Bytecode::new()
+fn tokens_to_bytecode(tokens: &[Token]) -> Result<Bytecode, AssemblerError> {
+    use Token::*;
+
+    let mut iter = tokens.iter();
+    match iter.next().unwrap() {
+        Instruction(mnem) => {
+            use Mnemonic::*;
+
+            fn push_bytes(bytes: &mut Bytecode, value: u16) {
+                bytes.push((value & 0xFF00 >> 12) as u8);
+                bytes.push((value & 0x00FF) as u8);
+            }
+
+            let mut bytes = Bytecode::new();
+            match mnem {
+                RET => push_bytes(&mut bytes, 0x00EE),
+                CLS => push_bytes(&mut bytes, 0x00E0),
+                _ => {},
+            };
+            Ok(bytes)
+        },
+        _ => {
+            Err(AssemblerError::ExpectedInstruction)
+        }
+    }
 }
 
-pub fn source_to_bytecode(source: &str) -> Bytecode {
+pub fn source_to_bytecode(source: &str) -> Result<Bytecode, AssemblerError> {
     let mut bytecode = Bytecode::new();
     for line in source.split("\n") {
+        if line.is_empty() {
+            continue;
+        }
+
         let toks: Vec<Token> = line.split(" ")
                                    .map(|word| word_to_token(word))
                                    .collect();
-        let mut instruction_bytecode = tokens_to_bytecode(&toks[..]);
+        let mut instruction_bytecode = tokens_to_bytecode(&toks[..])?;
         bytecode.append(&mut instruction_bytecode);
     }
 
-    bytecode
+    Ok(bytecode)
 }
