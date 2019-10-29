@@ -1,6 +1,6 @@
 use std::fmt;
 use crate::memory::Memory;
-use crate::specs::{Address, Byte};
+use crate::specs::Byte;
 
 const FRAME_HEIGHT: usize = 32;
 
@@ -15,25 +15,27 @@ impl FrameBuffer {
         }
     }
 
-    fn write_byte(&mut self, x: &mut usize, y: &mut usize, byte: Byte) {
+    fn write_byte(&mut self, x: usize, y: usize, byte: Byte) {
+        let mut x_iter = x;
         let mut mask = 0b10000000;
+
         for i in 0..8 {
             let bit = (byte & mask) >> (7 - i);
-            self.write((*x, *y), bit != 0);
+            self.write((x_iter, y), bit != 0);
             mask >>= 1;
-            *x += 1;
-            if *x == 64 {
-                *x = 0;
-                *y = (*y + 1) % 32;
+            x_iter += 1;
+            if x_iter == 64 {
+                x_iter = 0;
             }
         }
     }
 
     pub fn write_bytes(&mut self, pos: <Self as Memory>::Address, bytes: &[Byte]) {
-        let (mut x, mut y) = pos;
+        let (x, mut y) = pos;
 
         for byte in bytes {
-            self.write_byte(&mut x, &mut y, *byte);
+            self.write_byte(x, y, *byte);
+            y += 1;
         }
     }
 }
