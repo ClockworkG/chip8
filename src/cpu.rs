@@ -177,7 +177,9 @@ impl CPU {
                 let x_val = self.get_reg(x) as usize;
                 let y_val = self.get_reg(y) as usize;
                 let bytes = bus.read_bytes(self.i, n as Address);
-                bus.display_sprite((x_val, y_val), &bytes[..]);
+                if bus.display_sprite((x_val, y_val), &bytes[..]) {
+                    self.set_reg(0xF, 1);
+                }
             },
             Skp(x) => {
                 // FIXME

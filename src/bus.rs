@@ -33,8 +33,8 @@ impl Bus {
         }
     }
 
-    pub fn display_sprite(&mut self, pos: (usize, usize), sprite: &[u8]) {
-        self.frame_buffer.write_bytes(pos, sprite);
+    pub fn display_sprite(&mut self, pos: (usize, usize), sprite: &[u8]) -> bool {
+        self.frame_buffer.write_bytes(pos, sprite)
     }
 
     pub fn get_frame_buffer(&self) -> &FrameBuffer {

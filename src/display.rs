@@ -5,13 +5,15 @@ use crate::specs::Byte;
 const FRAME_HEIGHT: usize = 32;
 
 pub struct FrameBuffer {
-    buffer: [u64; FRAME_HEIGHT]
+    buffer: [u64; FRAME_HEIGHT],
+    erased: bool,
 }
 
 impl FrameBuffer {
     pub fn new() -> Self {
         FrameBuffer {
-            buffer: [0x0; FRAME_HEIGHT]
+            buffer: [0x0; FRAME_HEIGHT],
+            erased: false
         }
     }
 
@@ -30,13 +32,15 @@ impl FrameBuffer {
         }
     }
 
-    pub fn write_bytes(&mut self, pos: <Self as Memory>::Address, bytes: &[Byte]) {
+    pub fn write_bytes(&mut self, pos: <Self as Memory>::Address, bytes: &[Byte]) -> bool {
         let (x, mut y) = pos;
 
         for byte in bytes {
             self.write_byte(x, y, *byte);
             y += 1;
         }
+
+        self.erased
     }
 }
 
@@ -50,8 +54,15 @@ impl Memory for FrameBuffer {
     }
 
     fn write(&mut self, addr: Self::Address, value: Self::Value) {
+        self.erased = false;
+
         let (x, y) = addr;
+        let tmp = self.buffer[y];
         self.buffer[y] ^= (value as u64) << (63 - x);
+
+        if tmp & self.buffer[y] > 0 {
+            self.erased = true;
+        }
     }
 }
 
