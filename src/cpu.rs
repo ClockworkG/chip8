@@ -136,12 +136,12 @@ impl CPU {
                 self.set_reg(x, sum as u8);
             },
             SubReg(x, y) => {
-                let x_val = self.get_reg(x);
-                let y_val = self.get_reg(y);
+                let x_val = self.get_reg(x) as i16;
+                let y_val = self.get_reg(y) as i16;
                 if x_val > y_val {
                     self.set_reg(0xF, 1);
                 }
-                self.set_reg(x, x_val - y_val);
+                self.set_reg(x, (x_val - y_val) as u8);
             },
             Shr(x, _) => {
                 let x_val = self.get_reg(x);
@@ -151,12 +151,12 @@ impl CPU {
                 self.set_reg(x, x_val / 2);
             },
             SubN(x, y) => {
-                let x_val = self.get_reg(x);
-                let y_val = self.get_reg(y);
+                let x_val = self.get_reg(x) as i16;
+                let y_val = self.get_reg(y) as i16;
                 if y_val > x_val {
                     self.set_reg(0xF, 1);
                 }
-                self.set_reg(x, y_val - x_val);
+                self.set_reg(x, (y_val - x_val) as u8);
             },
             Shl(x, _) => {
                 let x_val = self.get_reg(x);
