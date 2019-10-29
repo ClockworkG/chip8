@@ -7,6 +7,7 @@ mod context;
 mod debugger;
 mod bus;
 mod display;
+mod input;
 mod window;
 
 extern crate clap;

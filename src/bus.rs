@@ -1,17 +1,20 @@
 use crate::memory::{MainMemory, Memory, merge_bytes};
 use crate::specs::{Address, Instruction, Byte};
 use crate::display::FrameBuffer;
+use crate::input::Keyboard;
 
 pub struct Bus {
     memory: MainMemory,
     frame_buffer: FrameBuffer,
+    keyboard: Keyboard,
 }
 
 impl Bus {
     pub fn new(memory: MainMemory) -> Self {
         Bus {
             memory,
-            frame_buffer: FrameBuffer::new()
+            frame_buffer: FrameBuffer::new(),
+            keyboard: Keyboard::new(),
         }
     }
 
@@ -31,6 +34,14 @@ impl Bus {
             self.memory.write(addr, *byte);
             addr += 1;
         }
+    }
+
+    pub fn press_key(&mut self, key: Option<u8>) {
+        self.keyboard.set_key_pressed(key);
+    }
+
+    pub fn get_key_pressed(&self) -> Option<u8> {
+        self.keyboard.get_key_pressed()
     }
 
     pub fn display_sprite(&mut self, pos: (usize, usize), sprite: &[u8]) -> bool {
