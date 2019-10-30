@@ -7,6 +7,8 @@ pub type Bytecode = Vec<u8>;
 pub enum AssemblerError {
     ExpectedInstruction,
     ExpectedAddress,
+    ExpectedRegister,
+    ExpectedVX,
 }
 
 impl fmt::Display for AssemblerError {
@@ -17,6 +19,12 @@ impl fmt::Display for AssemblerError {
             },
             AssemblerError::ExpectedAddress => {
                 write!(f, "An address was expected.")?
+            },
+            AssemblerError::ExpectedVX => {
+                write!(f, "A generic register was expected.")?
+            },
+            AssemblerError::ExpectedRegister => {
+                write!(f, "A register was expected.")?
             },
         }
         Ok(())
@@ -47,17 +55,22 @@ enum Mnemonic {
     SKNP,
 }
 
+#[derive(Debug, Clone, Copy)]
+enum RegisterID {
+    Generic(u8),
+    F,
+    I,
+    B,
+    ST,
+    DT,
+    DerefI,
+}
+
 #[derive(Debug)]
 enum Token {
     Instruction(Mnemonic),
     Literal(u16),
-    Register(u8),
-    RegisterF,
-    RegisterI,
-    DerefRegisterI,
-    RegisterB,
-    RegisterST,
-    RegisterDT,
+    Register(RegisterID),
     Unknown,
 }
 
@@ -85,19 +98,19 @@ fn word_to_token(word: &str) -> Token {
         "drw" => Instruction(Mnemonic::DRW),
         "skp" => Instruction(Mnemonic::SKP),
         "sknp" => Instruction(Mnemonic::SKNP),
-        "i" => RegisterI,
-        "f" => RegisterF,
-        "[i]" => DerefRegisterI,
-        "b" => RegisterB,
-        "st" => RegisterST,
-        "dt" => RegisterDT,
+        "i" => Register(RegisterID::I),
+        "f" => Register(RegisterID::F),
+        "[i]" => Register(RegisterID::DerefI),
+        "b" => Register(RegisterID::B),
+        "st" => Register(RegisterID::ST),
+        "dt" => Register(RegisterID::DT),
         tok_word => {
             use regex::Regex;
             let re = Regex::new(r"v(?P<id>[0-9a-fA-F])").unwrap();
             if re.is_match(tok_word) {
                 let captures = re.captures(tok_word).unwrap();
                 let id = u8::from_str_radix(&captures["id"], 16).unwrap();
-                return Register(id)
+                return Register(RegisterID::Generic(id))
             }
 
             let lit_re = Regex::new(r"0x(?P<num>([0-9a-fA-F])+)").unwrap();
@@ -121,6 +134,18 @@ fn fetch_addr(iter: &mut std::slice::Iter<'_, Token>) -> Result<Address, Assembl
                 _ => Err(AssemblerError::ExpectedAddress),
             }
         }
+    }
+}
+
+fn fetch_register(iter: &mut std::slice::Iter<'_, Token>) -> Result<RegisterID, AssemblerError> {
+    match iter.next() {
+        None => Err(AssemblerError::ExpectedRegister),
+        Some(tok) => {
+            match tok {
+                Token::Register(id) => Ok(*id),
+                _ => Err(AssemblerError::ExpectedRegister),
+            }
+        },
     }
 }
 
@@ -152,6 +177,14 @@ fn tokens_to_bytecode(tokens: &[Token]) -> Result<Bytecode, AssemblerError> {
                 CALL => {
                     let addr = fetch_addr(&mut iter)? | 0x2000;
                     push_bytes(&mut bytes, addr);
+                },
+                SE => {
+                    let reg = fetch_register(&mut iter)?;
+                    if let RegisterID::Generic(id) = reg {
+                        // FIXME...
+                    } else {
+                        return Err(AssemblerError::ExpectedVX);
+                    }
                 },
                 _ => {},
             };
