@@ -22,7 +22,7 @@ pub mod error {
     }
 }
 
-pub fn emulate(path: &Path, debug: bool) -> Result<(), error::CLIError> {
+pub fn emulate(path: &Path, debug: bool, verbose: bool) -> Result<(), error::CLIError> {
     let rom = memory::ROM::from_file(path)?;
 
     if debug {
@@ -30,6 +30,7 @@ pub fn emulate(path: &Path, debug: bool) -> Result<(), error::CLIError> {
         debugger.run();
     } else {
         let mut window = window::Window::new(rom);
+        window.display_pc = verbose;
         window.run();
     }
 
@@ -44,7 +45,7 @@ pub fn disassemble(path: &Path, address: bool) -> Result<(), error::CLIError> {
         let decoded = asm::decode_instruction(*instr);
 
         if address {
-            print!("{:#05X} ", addr * 2);
+            print!("{:#05X} ", 0x200 + addr * 2);
         }
         println!("{}", decoded);
     }

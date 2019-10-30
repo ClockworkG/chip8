@@ -12,6 +12,8 @@ pub struct Window {
     win: minifb::Window,
     screen_buffer: Vec<u32>,
 
+    pub display_pc: bool,
+
     instruction_timestamp: Instant,
     display_timestamp: Instant,
     timer_timestamp: Instant,
@@ -83,6 +85,7 @@ impl Context for Window {
         Window {
             cpu: CPU::new(),
             bus: Bus::new(mem),
+            display_pc: false,
             win: minifb::Window::new(
                 "Chip8",
                 640,
@@ -109,7 +112,11 @@ impl Context for Window {
             }
 
             if Instant::now() - self.instruction_timestamp > Duration::from_millis(2) {
-                self.cpu.tick(&mut self.bus);
+                let pc = self.cpu.tick(&mut self.bus);
+
+                if self.display_pc {
+                    println!("{:#05X}", pc);
+                }
                 self.instruction_timestamp = Instant::now();
             }
 

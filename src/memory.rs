@@ -144,8 +144,11 @@ impl ROM {
     pub fn instructions(&self) -> Vec<u16> {
         self.data.chunks(2)
                  .map(|word| {
-                    let (left, right) = (word[0], word[1]);
-                    merge_bytes(left, right)
+                    if word.len() != 2 {
+                        merge_bytes(word[0], 0x0)
+                    } else {
+                        merge_bytes(word[0], word[1])
+                    }
                  })
                  .collect()
     }

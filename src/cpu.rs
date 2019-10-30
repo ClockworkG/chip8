@@ -225,7 +225,7 @@ impl CPU {
             },
             LdB(x) => {
                 let val = self.get_reg(x);
-                let bytes = &[val / 100, (val % 100) / 10, val / 10];
+                let bytes = &[val / 100, (val % 100) / 10, val % 10];
                 bus.write_bytes(self.i, bytes);
             },
             LdIMem(x) => {
@@ -234,7 +234,7 @@ impl CPU {
             },
             LdVx(x) => {
                 let loc = self.i;
-                let bytes = bus.read_bytes(loc, x as Address);
+                let bytes = bus.read_bytes(loc, (x + 1) as Address);
                 for (idx, byte) in bytes.iter().enumerate() {
                     self.set_reg(idx as u8, *byte);
                 }

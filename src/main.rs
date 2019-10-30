@@ -24,6 +24,7 @@ fn main() {
             App::new("vm")
                 .about("runs the Chip8 virtual machine")
                 .arg(Arg::from_usage("-g, --debug 'enables debugging mode'"))
+                .arg(Arg::from_usage("-v, --verbose 'enables verbose mode'"))
                 .arg(Arg::from_usage("<rom> 'ROM file to run.'")),
         )
         .subcommand(
@@ -42,8 +43,9 @@ fn main() {
     if let Some(ref matches) = matches.subcommand_matches("vm") {
         let path = Path::new(matches.value_of("rom").unwrap());
         let debug_mode = matches.is_present("debug");
+        let verbose = matches.is_present("verbose");
 
-        cli::emulate(&path, debug_mode).unwrap();
+        cli::emulate(&path, debug_mode, verbose).unwrap();
     } else if let Some(ref _matches) = matches.subcommand_matches("asm") {
         // FIXME...
     } else if let Some(ref matches) = matches.subcommand_matches("dis") {
