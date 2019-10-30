@@ -115,7 +115,7 @@ impl Context for Window {
                 let pc = self.cpu.tick(&mut self.bus);
 
                 if self.display_pc {
-                    println!("{:#05X}", pc);
+                    println!("{:#05X} {}", pc, self.cpu.last_instruction);
                 }
                 self.instruction_timestamp = Instant::now();
             }

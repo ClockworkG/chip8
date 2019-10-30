@@ -31,6 +31,7 @@ pub struct CPU {
     sound_timer: Byte,
 
     random_device: ThreadRng,
+    pub last_instruction: InstructionData,
 }
 
 impl CPU {
@@ -44,6 +45,7 @@ impl CPU {
             delay_timer: 0,
             sound_timer: 0,
             random_device: rand::thread_rng(),
+            last_instruction: InstructionData::Sys(0x0),
         }
     }
 
@@ -242,6 +244,8 @@ impl CPU {
             Unknown => panic!("Illegal instruction, aborting..."),
             _ => {}
         }
+
+        self.last_instruction = data;
 
         self.pc
     }
