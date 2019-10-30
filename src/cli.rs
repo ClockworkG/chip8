@@ -4,6 +4,7 @@ use crate::asm;
 
 use crate::memory;
 use crate::debugger;
+use crate::window;
 use crate::context::Context;
 
 pub mod error {
@@ -27,6 +28,9 @@ pub fn emulate(path: &Path, debug: bool) -> Result<(), error::CLIError> {
     if debug {
         let mut debugger = debugger::Debugger::new(rom);
         debugger.run();
+    } else {
+        let mut window = window::Window::new(rom);
+        window.run();
     }
 
     Ok(())

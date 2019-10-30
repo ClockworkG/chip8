@@ -110,7 +110,11 @@ impl CPU {
             },
             Ld(x, n) => self.registers[x as usize] = n,
             Add(x, n) => {
-                self.set_reg(x, self.get_reg(x) + n);
+                let sum: u16 = self.get_reg(x) as u16 + n as u16;
+                if sum > 0xFF {
+                    self.set_reg(0xF, 1);
+                }
+                self.set_reg(x, sum as u8);
             },
             LdReg(x, y) => {
                 self.set_reg(x, self.get_reg(y));
@@ -126,17 +130,18 @@ impl CPU {
             },
             AddReg(x, y) => {
                 let sum: u16 = self.get_reg(x) as u16 + self.get_reg(y) as u16;
-                let carry = sum % 256;
-                self.set_reg(x, (sum - carry) as u8);
-                self.set_reg(0xF, carry as u8);
+                if sum > 0xFF {
+                    self.set_reg(0xF, 1);
+                }
+                self.set_reg(x, sum as u8);
             },
             SubReg(x, y) => {
-                let x_val = self.get_reg(x);
-                let y_val = self.get_reg(y);
+                let x_val = self.get_reg(x) as i16;
+                let y_val = self.get_reg(y) as i16;
                 if x_val > y_val {
                     self.set_reg(0xF, 1);
                 }
-                self.set_reg(x, x_val - y_val);
+                self.set_reg(x, (x_val - y_val) as u8);
             },
             Shr(x, _) => {
                 let x_val = self.get_reg(x);
@@ -146,12 +151,12 @@ impl CPU {
                 self.set_reg(x, x_val / 2);
             },
             SubN(x, y) => {
-                let x_val = self.get_reg(x);
-                let y_val = self.get_reg(y);
+                let x_val = self.get_reg(x) as i16;
+                let y_val = self.get_reg(y) as i16;
                 if y_val > x_val {
                     self.set_reg(0xF, 1);
                 }
-                self.set_reg(x, y_val - x_val);
+                self.set_reg(x, (y_val - x_val) as u8);
             },
             Shl(x, _) => {
                 let x_val = self.get_reg(x);
@@ -182,10 +187,19 @@ impl CPU {
                 }
             },
             Skp(x) => {
-                // FIXME
+                let val = self.get_reg(x);
+                match bus.get_key_pressed() {
+                    Some(key) if key == val => self.pc += 2,
+                    _ => {}
+                }
             },
             Sknp(x) => {
-                // FIXME
+                let val = self.get_reg(x);
+                match bus.get_key_pressed() {
+                    Some(key) if key != val => self.pc += 2,
+                    None => self.pc += 2,
+                    _ => {}
+                }
             },
             LdF(x) => {
                 let font_index: Byte = self.get_reg(x);
@@ -194,8 +208,11 @@ impl CPU {
             LdRegDt(x) => {
                 self.set_reg(x, self.delay_timer);
             },
-            LdK(n) => {
-                // FIXME
+            LdK(x) => {
+                match bus.get_key_pressed() {
+                    Some(key) => self.set_reg(x, key),
+                    None => self.pc -= 2,
+                }
             },
             LdDtReg(x) => {
                 self.delay_timer = self.get_reg(x);
@@ -206,8 +223,10 @@ impl CPU {
             AddI(x) => {
                 self.i = self.i + self.get_reg(x) as u16;
             },
-            LdB(n) => {
-                // FIXME
+            LdB(x) => {
+                let val = self.get_reg(x);
+                let bytes = &[val / 100, (val % 100) / 10, val / 10];
+                bus.write_bytes(self.i, bytes);
             },
             LdIMem(x) => {
                 let loc = self.i;
@@ -231,6 +250,19 @@ impl CPU {
         let instr = self.fetch(bus);
         let data = self.decode(instr);
         self.execute(data, bus)
+    }
+
+    pub fn timer_decrement(&mut self) {
+        let dt = self.delay_timer;
+        let st = self.sound_timer;
+
+        if self.delay_timer > 0 {
+            self.delay_timer -= 1;
+        }
+
+        if self.sound_timer > 0 {
+            self.sound_timer -= 1;
+        }
     }
 }
 
