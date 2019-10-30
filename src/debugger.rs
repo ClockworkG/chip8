@@ -1,12 +1,12 @@
 extern crate rustyline;
 extern crate termion;
 
-use crate::context::Context;
 use crate::cpu::CPU;
 use crate::memory::{MainMemory, ROM};
 use crate::bus::Bus;
 use crate::specs::{PROGRAM_BEGIN, Address};
 use crate::asm::{decode_instruction, InstructionData};
+use crate::watcher::Watcher;
 
 use rustyline::Editor;
 use std::collections::HashMap;
@@ -189,17 +189,15 @@ impl Debugger {
             }
         }
     }
-}
 
-impl Context for Debugger {
-    fn new(rom: ROM) -> Self {
+    pub fn new(rom: ROM, watcher: Watcher) -> Self {
         let mem = MainMemory::with_rom(rom);
         let mut variables = HashMap::new();
 
         variables.insert("context_span".to_owned(), 2);
 
         Debugger {
-            cpu: CPU::new(),
+            cpu: CPU::new(watcher),
             editor: Editor::<()>::new(),
             must_exit: false,
             bus: Bus::new(mem),
@@ -210,7 +208,7 @@ impl Context for Debugger {
         }
     }
 
-    fn run(&mut self) {
+    pub fn run(&mut self) {
         self.show_context();
         loop {
             if self.need_input {

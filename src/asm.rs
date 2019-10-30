@@ -5,6 +5,7 @@ use crate::specs::{
     Address,
 };
 
+#[derive(Debug)]
 pub enum InstructionData {
     Sys(Address),
     Cls,

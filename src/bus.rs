@@ -36,6 +36,10 @@ impl Bus {
         }
     }
 
+    pub fn clear_screen(&mut self) {
+        self.frame_buffer.clear_screen();
+    }
+
     pub fn press_key(&mut self, key: Option<u8>) {
         self.keyboard.set_key_pressed(key);
     }

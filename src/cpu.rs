@@ -15,6 +15,7 @@ use crate::asm::{
     decode_instruction,
 };
 use crate::bus::Bus;
+use crate::watcher::{Watcher, Message};
 use std::fmt;
 use rand::Rng;
 use rand::prelude::ThreadRng;
@@ -31,11 +32,11 @@ pub struct CPU {
     sound_timer: Byte,
 
     random_device: ThreadRng,
-    pub last_instruction: InstructionData,
+    watcher: Watcher,
 }
 
 impl CPU {
-    pub fn new() -> Self {
+    pub fn new(watcher: Watcher) -> Self {
         CPU {
             i: 0x0,
             pc: PROGRAM_BEGIN as Address,
@@ -45,7 +46,7 @@ impl CPU {
             delay_timer: 0,
             sound_timer: 0,
             random_device: rand::thread_rng(),
-            last_instruction: InstructionData::Sys(0x0),
+            watcher
         }
     }
 
@@ -64,6 +65,11 @@ impl CPU {
     }
 
     fn set_reg(&mut self, index: Nibble, value: Byte) {
+        self.watcher.send(Message::RegisterChange {
+            id: index,
+            old: self.registers[index as usize],
+            new: value,
+        });
         self.registers[index as usize] = value;
     }
 
@@ -81,7 +87,7 @@ impl CPU {
         use InstructionData::*;
 
         match data {
-            Cls => (),
+            Cls => bus.clear_screen(),
             Ret => {
                 if self.sp == 0 {
                     panic!("Invalid stack.");
@@ -245,7 +251,7 @@ impl CPU {
             _ => {}
         }
 
-        self.last_instruction = data;
+        self.watcher.send(Message::Execute { instr: data, new_pc: self.pc });
 
         self.pc
     }

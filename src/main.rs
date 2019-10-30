@@ -3,11 +3,11 @@ mod specs;
 mod memory;
 mod cpu;
 mod cli;
-mod context;
 mod debugger;
 mod bus;
 mod display;
 mod input;
+mod watcher;
 mod window;
 
 extern crate clap;

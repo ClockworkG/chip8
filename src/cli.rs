@@ -5,7 +5,7 @@ use crate::asm;
 use crate::memory;
 use crate::debugger;
 use crate::window;
-use crate::context::Context;
+use crate::watcher;
 
 pub mod error {
     use std::io;
@@ -24,13 +24,15 @@ pub mod error {
 
 pub fn emulate(path: &Path, debug: bool, verbose: bool) -> Result<(), error::CLIError> {
     let rom = memory::ROM::from_file(path)?;
+    let mut watcher = watcher::Watcher::new();
+
+    watcher.verbose = verbose;
 
     if debug {
-        let mut debugger = debugger::Debugger::new(rom);
+        let mut debugger = debugger::Debugger::new(rom, watcher);
         debugger.run();
     } else {
-        let mut window = window::Window::new(rom);
-        window.display_pc = verbose;
+        let mut window = window::Window::new(rom, watcher);
         window.run();
     }
 

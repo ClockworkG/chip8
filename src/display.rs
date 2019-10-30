@@ -32,6 +32,12 @@ impl FrameBuffer {
         }
     }
 
+    pub fn clear_screen(&mut self) {
+        for i in 0..FRAME_HEIGHT {
+            self.buffer[i] = 0x0;
+        }
+    }
+
     pub fn write_bytes(&mut self, pos: <Self as Memory>::Address, bytes: &[Byte]) -> bool {
         let (x, mut y) = pos;
 

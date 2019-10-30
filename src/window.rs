@@ -1,6 +1,6 @@
-use crate::context::Context;
 use crate::cpu::CPU;
 use crate::bus::Bus;
+use crate::watcher::Watcher;
 use crate::memory::{MainMemory, ROM, Memory};
 use std::time::{Duration, Instant};
 
@@ -11,8 +11,6 @@ pub struct Window {
     bus: Bus,
     win: minifb::Window,
     screen_buffer: Vec<u32>,
-
-    pub display_pc: bool,
 
     instruction_timestamp: Instant,
     display_timestamp: Instant,
@@ -76,16 +74,13 @@ impl Window {
             None => None,
         }
     }
-}
 
-impl Context for Window {
-    fn new(rom: ROM) -> Self {
+    pub fn new(rom: ROM, watcher: Watcher) -> Self {
         let mem = MainMemory::with_rom(rom);
 
         Window {
-            cpu: CPU::new(),
+            cpu: CPU::new(watcher),
             bus: Bus::new(mem),
-            display_pc: false,
             win: minifb::Window::new(
                 "Chip8",
                 640,
@@ -100,7 +95,7 @@ impl Context for Window {
         }
     }
 
-    fn run(&mut self) {
+    pub fn run(&mut self) {
         use minifb::Key::Escape;
 
         while self.win.is_open() && !self.win.is_key_down(Escape) {
@@ -112,11 +107,7 @@ impl Context for Window {
             }
 
             if Instant::now() - self.instruction_timestamp > Duration::from_millis(2) {
-                let pc = self.cpu.tick(&mut self.bus);
-
-                if self.display_pc {
-                    println!("{:#05X} {}", pc, self.cpu.last_instruction);
-                }
+                self.cpu.tick(&mut self.bus);
                 self.instruction_timestamp = Instant::now();
             }
 
