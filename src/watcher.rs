@@ -3,6 +3,7 @@ use crate::specs::{Address, Byte, Nibble};
 
 pub struct Watcher {
     pub verbose: bool,
+    pub debug: bool,
 }
 
 #[derive(Debug)]
@@ -15,6 +16,7 @@ impl Watcher {
     pub fn new() -> Self {
         Watcher {
             verbose: false,
+            debug: false,
         }
     }
 

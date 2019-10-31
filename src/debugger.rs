@@ -25,7 +25,6 @@ pub struct Debugger {
 }
 
 enum DebuggerCommand {
-    Start,
     Break(Address),
     Set(String, i32),
     Continue,
@@ -66,7 +65,6 @@ impl Debugger {
                 "c" | "continue" => Continue,
                 "next" | "n" => Next,
                 "run" | "r" => Run,
-                "start" => Start,
                 "dump" => Dump,
                 "screen" => Screen,
                 "status" => Status,
@@ -178,9 +176,6 @@ impl Debugger {
                     },
                     Set(key, value) => {
                         self.variables.insert(key, value);
-                    },
-                    Unknown => {
-                        println!("Command not found: {}", input);
                     },
                 }
             },

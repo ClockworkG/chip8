@@ -47,7 +47,7 @@ fn main() {
 
         cli::emulate(&path, debug_mode, verbose).unwrap();
     } else if let Some(ref _matches) = matches.subcommand_matches("asm") {
-        // FIXME...
+        unimplemented!();
     } else if let Some(ref matches) = matches.subcommand_matches("dis") {
         let path = Path::new(matches.value_of("rom").unwrap());
         let display_address = matches.is_present("n");
